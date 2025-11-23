@@ -1,0 +1,131 @@
+---
+title: "Why DDSP?"
+subtitle: "Performing fast and efficient speech transfer via Differentiable Digital Signal Processing"
+description: "A brief overview of recent DDSP research and applications for beginners"
+date: 2025-01-10
+thumbnail: "/images/spec.png"
+tags: ["audio", "signal-processing", "dsp"]
+---
+
+import VowelSynthesizer from '../../components/VowelSynthesizer.tsx';
+import SawtoothGenerator from '../../components/SawtoothGenerator.tsx';
+
+## Introduction
+This article provides an introduction to some recent developments in speech synthesis, specifically focusing on DDSP-based approaches. This article is intended for those not necessarily in the domain of audio signal processing. Readers should generally be familiar with basic concepts in deep learning, neural networks, and some applied knowledge in libraries such as PyTorch.
+
+## Introduction to Speech Synthesis
+
+Speech synthesis is the process of generating speech given some input. Like early neural networks, which were grounded in theories of the human brain and perception, early speech systhesis were biologically inspired by theories in linguistics of human vocal production.
+
+These modeled the process of speaking as a digital signal processing task, where the vocal flaps produce some signal that goes through some series of filters and other processing to produce the final audio waveform.
+
+## Interactive Vowel Synthesis Demo
+
+To better understand how formant filtering works in speech synthesis, try this interactive demo below. It uses Web Audio API to simulate the vocal tract with bandpass filters that represent different formants (resonant frequencies) of vowels.
+
+<VowelSynthesizer client:load />
+
+
+## How It Works
+
+The synthesizer models three key components of human speech production:
+
+### Excitation Source: The Sawtooth Wave
+
+The synthesis starts with a **sawtooth wave** oscillator, a waveform that sounds harsh and buzzy on its own, but is rich in harmonics (multiples of the fundamental frequency). Think of it as a raw "buzz" that contains many frequency components simultaneously:
+
+$$
+x(t) = \sum_{n=1}^{N} \frac{\sin(2\pi n f_0 t)}{n}
+$$
+
+This mimics the sound produced by your vibrating vocal folds before any shaping by your mouth and throat. The pitch slider controls the fundamental frequency (f_0), typically 100-120 Hz for male voices, 200-220 Hz for female voices. The sawtooth is ideal because its rich harmonic content gives the formant filters plenty of frequencies to work with.
+
+# WARNING: TURN YOUR VOLUME DOWN, THE RAW SAWTOOTH IS VERY LOUD
+
+<SawtoothGenerator client:load />
+
+
+<br />
+
+The sawtooth wave then passes through three bandpass filters connected in series (a cascade):
+
+$$
+\text{Sawtooth} \xrightarrow{\text{Filter 1}} \xrightarrow{\text{Filter 2}} \xrightarrow{\text{Filter 3}} \text{Vowel}
+$$
+
+This cascade mimics how sound propagates through your vocal tract,a tube with multiple resonant cavities (throat, mouth, lips) that each emphasize certain frequencies while dampening others. Each filter in the cascade adds a formant,a peak in the frequency spectrum at a specific frequency.
+
+### Bandpass Filter Response
+
+Each filter is a bandpass filter tuned to a specific formant frequency that amplifies frequencies near its center frequency ($f_c$), attenuates frequencies far from the center, and has a bandwidth that controls how selective it is
+
+The filter's frequency response looks like a bell curve centered at the formant frequency:
+
+$$H
+H(f) \approx \frac{1}{1 + Q^2\left(\frac{f}{f_c} - \frac{f_c}{f}\right)^2}
+$$
+
+The Q factor (quality factor) controls how "sharp" this peak is:
+- High Q (10-20) = narrow peak = "tense" or clear vowel
+- Low Q (5-8) = wide peak = "breathy" or relaxed vowel
+
+When all three filters work together, they create a spectrum with three distinct peaks—the formants that our ears recognize as specific vowels.
+
+### The Three Formants
+
+Each bandpass filter emphasizes a different frequency band:
+
+- **F1** (First formant, ~300-800 Hz): Controls vowel height (high vs. low)
+- **F2** (Second formant, ~800-2500 Hz): Controls vowel frontness (front vs. back)  
+- **F3** (Third formant, ~2000-3500 Hz): Adds naturalness and speaker characteristics
+
+Every vowel has a unique combination of these three formant frequencies. For example:
+- /i/ ("ee" in "beet"): F1=270 Hz, F2=2290 Hz, F3=3010 Hz
+- /ɑ/ ("ah" in "father"): F1=730 Hz, F2=1090 Hz, F3=2440 Hz
+
+### Parameter Mapping
+
+The demo's sliders control these formants in intuitive ways:
+
+- **Front ↔ Back**: Primarily adjusts F2 (and F1 slightly)
+- **High ↔ Low**: Primarily adjusts F1 (and F2 slightly)
+- **Gender**: Scales all formants uniformly (shorter vocal tracts = higher formants)
+- **Voice Quality**: Adjusts filter bandwidth (Q factor)—narrow for "tense" vowels, wide for "breathy" sounds
+
+The State Variable Filter implementation uses smooth parameter interpolation to prevent clicking artifacts as you move the sliders:
+
+$$
+g = \tan\left(\frac{\pi f_c}{f_s}\right), \quad Q = \frac{f_c}{BW}
+$$
+
+where $f_c$ is the formant frequency, $f_s$ is the sample rate, and bandwidth (BW) determines selectivity.
+
+## From Formants To Words
+
+We will not cover how consonants are generated, but historically they can be generated via a similar filtering process, although can differ in the way they interact with the harmonics, as some consonants are much more related to percussion (e.g., plosives like /p/ and /t/), rather than voiced harmonics which stem from the vocal folds.
+
+Once we have a way of generating each of these sounds, we can then essentially map text to speech by converting text into a sequence of these generated sounds. In practice, there are many more details to make things sound more natural, such as defining prosity on differn punctuation, words, and relationships between different sounds.
+
+We see that the end result of this process (as seen in the above demo), are sounds that are inteliigible, but robotic and unexpressive. You may have noticed that some combinations of parameters resemble Perfect Paul, the TTS voice used by Stephen Hawking.
+
+With this in mind, there are several challenges and questions in building a more sophisticated speech synthesis system. This includes making softer voices, onces that are less monotone, and can perhaps even simulate emotion. We however see that in this rather simple formant synthesis task, we had quite a few parameters, and each of them had to be hand tuned and known before-hand. To make a desired voice requires more complexity for expressability, as well as finding relationships between these parameters to create more natural and varied speech patterns.
+
+## Modern Neural Approaches 
+
+Rather than manually tuning each parameter, modern neural approaches can learn these mappings automatically from large datasets of audio and text pairs. This is easier said than done.
+
+### Diffusion Based Approaches: Grad-TTS
+
+As of writing this, the most powerful speech models make use of [flow matching](https://arxiv.org/abs/2210.02747). Flow matching is an enticing alternative to diffusion models, with new models such as CosyVoice demnostrating superior latency, controlability, and stability. For the purposes of this demo, we will focus more on diffusion models, as they are more commonly understood, and better demonstrate the need for DDSP-based approaches.
+
+**Grad-TTS** Published in 2021 by [Popv, Vovk et al](https://arxiv.org/pdf/2105.06337) offered state-of-the-art performance on TTS tasks at the time of publication.
+
+
+
+
+
+
+
+
+
+

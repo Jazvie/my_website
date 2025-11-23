@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog');
+const sortedPosts = allPosts
+  .filter((post) => post.slug !== 'example-post')
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title="Technical Blog - Home">
+  <div class="container">
+    <section class="hero">
+      <h1>Andrea Guzman</h1>
+      <p class="description">
+        I am currently studying computer science at Northwestern University. I completed my undergraduate studies in mathematics and computer science at the University of Califonia Berkeley in 2025
+      </p>
+      <p class="description">
+        My interests lie in the domains of audio signal processing, convex optimization, and high-performance computing.
+      </p>
+
+      <p class="description">
+        I can be contacted via agzmn [at] protonmail [dot] com
+      </p>
+    </section>
+
+    <section class="articles">
+      <h2 class="section-title">Articles</h2>
+      <div class="articles-grid">
+        {sortedPosts.map((post) => (
+          <ArticleCard
+            title={post.data.title}
+            subtitle={post.data.subtitle}
+            date={post.data.date}
+            thumbnail={post.data.thumbnail}
+            slug={post.slug}
+          />
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .hero {
+    margin-bottom: 4rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid #e5e5e5;
+    max-width: 720px;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .description {
+    font-size: 1.25rem;
+    color: #4a4a4a;
+    line-height: 1.6;
+  }
+
+  .articles {
+    margin-bottom: 4rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 1rem;
+    }
+
+    .hero {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+    }
+
+    .description {
+      font-size: 1.125rem;
+    }
+
+    .articles-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+</style>

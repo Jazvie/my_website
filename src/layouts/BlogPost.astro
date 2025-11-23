@@ -1,0 +1,82 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  date: Date;
+  description?: string;
+}
+
+const { title, subtitle, date, description } = Astro.props;
+
+const formattedDate = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+}).format(date);
+---
+
+<BaseLayout title={title} description={description || subtitle}>
+  <article>
+    <header class="article-header">
+      <h1>{title}</h1>
+      {subtitle && <p class="subtitle">{subtitle}</p>}
+      <time datetime={date.toISOString()}>{formattedDate}</time>
+    </header>
+
+    <div class="content">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  article {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .article-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .article-header h1 {
+    margin-bottom: 0.75rem;
+  }
+
+  .subtitle {
+    font-size: 1.25rem;
+    color: #4a4a4a;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+
+  time {
+    font-size: 0.875rem;
+    color: #666;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .content {
+    margin-bottom: 4rem;
+  }
+
+  @media (max-width: 768px) {
+    article {
+      padding: 0 1rem;
+    }
+
+    .article-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+    }
+  }
+</style>
