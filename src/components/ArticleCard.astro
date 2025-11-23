@@ -15,12 +15,12 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
   day: 'numeric'
 }).format(date);
 
-const thumbnailUrl = thumbnail || '/images/placeholder.jpg';
+const thumbnailUrl = thumbnail || `${import.meta.env.BASE_URL}/images/placeholder.jpg`;
 ---
 
 <article class="article-card">
-  <a href={`/blog/${slug}`} class="card-link">
-    <img src={thumbnailUrl || "/placeholder.svg"} alt={title} class="thumbnail" />
+  <a href={`${import.meta.env.BASE_URL}/blog/${slug}`} class="card-link">
+    <img src={thumbnailUrl || `${import.meta.env.BASE_URL}/placeholder.svg`} alt={title} class="thumbnail" />
     <div class="card-content">
       <h2 class="card-title">{title}</h2>
       {subtitle && <p class="card-subtitle">{subtitle}</p>}
