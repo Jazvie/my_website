@@ -146,7 +146,7 @@ $$dX_t = (1/2 \Sigma^{-1}(\mu - X_t) - \nabla log p_t(X_t))\beta_t dt + \sqrt{\b
 
 Where $\tilde{W}_t$ is a reverse-time Brownian motion and $p_t$ is the probability density function of $X_t$.
 
-The idea here is that if we a good way of estimating the $\lambda \log p_t(X_t)$ term, then we have a good idea of what the distribution of the original $X_0$ looks like. That is because this term poinyd in yhr fitrvyion of maximum increase of log-density, meaning that if we have a perfect estimation of this term at every timestep, we are able to fully recover the original $X_0$. Therefore, if we have a neural-network that can make these types of predictions, we are able to get an understanding of $X_0$'s distribution by sampling from $\mathcal{N}(\mu, \Sigma)$, then performing the reverse, diffusion process.
+The idea here is that if we a good way of estimating the $\lambda \log p_t(X_t)$ term, then we have a good idea of what the distribution of the original $X_0$ looks like. That is because this term points in the direction of maximum increase of log-density, meaning that if we have a perfect estimation of this term at every timestep, we are able to fully recover the original $X_0$. Therefore, if we have a neural-network that can make these types of predictions, we are able to get an understanding of $X_0$'s distribution by sampling from $\mathcal{N}(\mu, \Sigma)$, then performing the reverse, diffusion process.
 
 
 The loss function is given by
