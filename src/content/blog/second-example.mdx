@@ -137,7 +137,7 @@ Where:
 - $\beta_t$ is a noise schedule function (typically linear)
 - $W_t$ is a standard Brownian motion (If you are not familiar with browning motion, just think of it as a source of noise in this context)
 
-We can understand the $dX_t = (1/2)\Sigma^{-1}(\mu - X_t)\beta_t dt$ term as a normalizing term and the right term as the term responsible for adding noise. As this process runs, we move from something resembling our spectrogram, to the normal distribution $\mathcal{N}(0\mu,\Sigma). It is provable that converge nce holds regardless of $X_0$, making this a robust process for converting our inputs to some noisy distribution.
+We can understand the $dX_t = (1/2)\Sigma^{-1}(\mu - X_t)\beta_t dt$ term as a normalizing term and the right term as the term responsible for adding noise. As this process runs, we move from something resembling our spectrogram, to the normal distribution $\mathcal{N}(0\mu,\Sigma)$. It is provable that converge nce holds regardless of $X_0$, making this a robust process for converting our inputs to some noisy distribution.
 
 Simmilarly we have a reverse diffusion process defined by:
 
@@ -170,7 +170,7 @@ Putting everything together, the authors end up with a model that has very power
 
 Putting this all together, we see we can create realistic speech by training on different voices, however the nature of diffusion provides a computational challange for us to overcome
 
-TODO: DDSP, maybe expend on diffusion more
+TODO: DDSP, maybe expend on diffusion more, add a demo, use more pictures
 
 
 
