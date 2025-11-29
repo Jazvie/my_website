@@ -124,9 +124,53 @@ As of writing this, the most powerful speech models make use of [flow matching](
 **Grad-TTS** Published in 2021 by [Popv, Vovk et al](https://arxiv.org/pdf/2105.06337) offered state-of-the-art performance on TTS tasks at the time of publication.
 
 
+![Grad-TTS architecture diagram](../../../images/gradtts.png)
+
+Diffusion probability models allow for us to generate audio that can emulate realistic voice without so much hand tuning. Because spectrograms are essentially images that represent speech, this process can be viewed very similarly to diffusion on images, where we have some input image, we iterativly add noise, then perform a denoising process. Mathematically this can be modeled as:
+
+$$dX_t = (1/2)\Sigma^{-1}(\mu - X_t)\beta_t dt + \sqrt{\beta_t} dW_t, t \in [0, T]$$
+
+Where: 
+- $X_t$ represents the mel-spectrogram at time step $t$
+- $\mu$ is the mean vector (aligned encoder output)
+- $\Sigma$ is a diagonal covariance matrix
+- $\beta_t$ is a noise schedule function (typically linear)
+- $W_t$ is a standard Brownian motion (If you are not familiar with browning motion, just think of it as a source of noise in this context)
+
+We can understand the $dX_t = (1/2)\Sigma^{-1}(\mu - X_t)\beta_t dt$ term as a normalizing term and the right term as the term responsible for adding noise. As this process runs, we move from something resembling our spectrogram, to the normal distribution $\mathcal{N}(0\mu,\Sigma). It is provable that converge nce holds regardless of $X_0$, making this a robust process for converting our inputs to some noisy distribution.
+
+Simmilarly we have a reverse diffusion process defined by:
+
+$$dX_t = (1/2 \Sigma^{-1}(\mu - X_t) - \nabla log p_t(X_t))\beta_t dt + \sqrt{\beta_t} d\tilde{W}_t, t \in [0, T]$$
 
 
+Where $\tilde{W}_t$ is a reverse-time Brownian motion and $p_t$ is the probability density function of $X_t$.
 
+The idea here is that if we a good way of estimating the $\lambda \log p_t(X_t)$ term, then we have a good idea of what the distribution of the original $X_0$ looks like. That is because this term poinyd in yhr fitrvyion of maximum increase of log-density, meaning that if we have a perfect estimation of this term at every timestep, we are able to fully recover the original $X_0$. Therefore, if we have a neural-network that can make these types of predictions, we are able to get an understanding of $X_0$'s distribution by sampling from $\mathcal{N}(\mu, \Sigma)$, then performing the reverse, diffusion process.
+
+
+The loss function is given by
+
+$$\mathcal{L}t(X_0) = E_{\epsilon_t}[||s_\theta(X_t, t) + \lambda(\Sigma, t)^{-1}\epsilon_t||^2_2]$$
+
+Where:
+- $s_\theta(X_t, t)$ is the neural network that estimates the score
+- $\epsilon_t$ is sampled from $N(0, \lambda(\Sigma, t))$
+- $X_t = \rho(X_0, \Sigma, \mu, t) + \epsilon_t$
+
+The left term is our prediction of the gradient term in the reverse diffusion process. The right term is a sort of ground-truth of the gradient term, this is derived explicitly from the paper, and can be done so by explocitly solving the forward diffusion differential equation.
+
+But where do these $\mu$ and $\Sigma$ terms come from in practice? what do they mean?
+
+In the context of Grad-TTS, $\mu$ is the model's text-conditioned prediction of the final mel-spectrogram. It acts as a guide or a "noisy target" for the diffusion decoder. This term is derived by splitting up a text sequence of phonemes/characters, and aligns them in a way that encodes their duration. Instead of starting from pure random noise, the reverse diffusion process starts from noise that is already centered around this $\mu$. What this means in the forward diffusion process is that we take some speech, and move it towards some distribution that represents utterances of simmilar semantic meaning. Therefore, the reverse diffusion process generates speech, starting from a valued sampled from this text-encoded space.
+
+As for the $\Sigma$ term, this is less semantically important. The authors end up just setting this as the identity, making it so noise is added in a symmetrical way.
+
+Putting everything together, the authors end up with a model that has very powerful speech synthesis capabilities, however, due to the computational complexity of the diffusion process, the model has some issues with both latency and memory. Doing a single process means we have multiple passes of the network, and because out output is a spectrogram, we need a seperate vocoding process such as [Hifigan](https://arxiv.org/abs/2010.05646) (Kong et al., 2020) to convert it into audio. While other faster neural-vocoders can be used for this last part, HiFi-GAN was used by the authors due to its high-quality outputs.
+
+Putting this all together, we see we can create realistic speech by training on different voices, however the nature of diffusion provides a computational challange for us to overcome
+
+TODO: DDSP, maybe expend on diffusion more
 
 
 
